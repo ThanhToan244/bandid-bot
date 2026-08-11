@@ -5,7 +5,7 @@ import time
 import os
 import requests
 
-TOKEN = "8928629119:AAHv9Ab9fHpI3rQdAgSCJEJKk1qRVl07xRQ"
+TOKEN = "8928629119:AAEsNQyk81o5zSmykc5RO8jRJCBZ0zu7KOI"
 FIREBASE_URL = "https://bandidkey-default-rtdb.firebaseio.com/"
 ADMIN_USER_ID = 7539743405
 
