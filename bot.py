@@ -1,15 +1,17 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import logging
 import random
 import time
-import os
 import requests
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
 
 TOKEN = "8928629119:AAEsNQyk81o5zSmykc5RO8jRJCBZ0zu7KOI"
 FIREBASE_URL = "https://bandidkey-default-rtdb.firebaseio.com/"
 ADMIN_USER_ID = 7539743405
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
+def start(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     text = (
         "🤖 **BAND ID BOT (CLOUD SERVER)**\n\n"
@@ -22,50 +24,54 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     if user_id == ADMIN_USER_ID:
         text += "• /taokey - [QTV] Tạo key nhanh\n"
-    await update.message.reply_text(text, parse_mode="Markdown")
+    update.message.reply_text(text, parse_mode="Markdown")
 
-async def getkey(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def getkey(update: Update, context: CallbackContext):
     random_code = f"KEY-{random.randint(100000, 999999)}"
     session_id = f"S_{int(time.time() * 1000)}"
     payload = {"code": random_code, "type": "day", "createdAt": int(time.time() * 1000)}
     requests.put(f"{FIREBASE_URL}keys/{session_id}.json", json=payload)
     
     link4m_url = f"https://link4m.co/st?api=667da5e0512ac00cba52fb6f&url=https://ThanhToan244.github.io/getkey/?session={session_id}"
-    await update.message.reply_text(f"🎁 **LINK VƯỢT NHẬN KEY:**\n{link4m_url}")
+    update.message.reply_text(f"🎁 **LINK VƯỢT NHẬN KEY:**\n{link4m_url}", parse_mode="Markdown")
 
-async def key_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔑 **Hướng dẫn:** Copy mã key sau khi vượt link dán vào app Band ID để kích hoạt!")
+def key_cmd(update: Update, context: CallbackContext):
+    update.message.reply_text("🔑 **Hướng dẫn:** Copy mã key sau khi vượt link dán vào app Band ID để kích hoạt!", parse_mode="Markdown")
 
-async def tk(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def tk(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     user_name = update.effective_user.first_name
     balance = 100000000000000 if user_id == ADMIN_USER_ID else 0
-    await update.message.reply_text(f"👤 **Tài khoản:** {user_name}\n• ID: `{user_id}`\n• Số dư: {balance:,} VNĐ", parse_mode="Markdown")
+    update.message.reply_text(f"👤 **Tài khoản:** {user_name}\n• ID: `{user_id}`\n• Số dư: {balance:,} VNĐ", parse_mode="Markdown")
 
-async def open_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🟢 **Trạng thái:** Hệ thống Band ID đang hoạt động bình thường!")
+def open_cmd(update: Update, context: CallbackContext):
+    update.message.reply_text("🟢 **Trạng thái:** Hệ thống Band ID đang hoạt động bình thường!", parse_mode="Markdown")
 
-async def off_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔴 **Trạng thái:** Hệ thống đang tạm ngưng hoặc bảo trì.")
+def off_cmd(update: Update, context: CallbackContext):
+    update.message.reply_text("🔴 **Trạng thái:** Hệ thống đang tạm ngưng hoặc bảo trì.", parse_mode="Markdown")
 
-async def taokey(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def taokey(update: Update, context: CallbackContext):
     if update.effective_user.id != ADMIN_USER_ID:
         return
     random_code = f"KEY-{random.randint(1000000, 9999999)}"
     session_id = f"ADMIN_GEN_{int(time.time() * 1000)}"
     requests.put(f"{FIREBASE_URL}keys/{session_id}.json", json={"code": random_code, "type": "day"})
-    await update.message.reply_text(f"🛠️ **Tạo Key QTV thành công:** `{random_code}`", parse_mode="Markdown")
+    update.message.reply_text(f"🛠️ **Tạo Key QTV thành công:** `{random_code}`", parse_mode="Markdown")
 
 def main():
-    application = ApplicationBuilder().token(TOKEN).build()
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("getkey", getkey))
-    application.add_handler(CommandHandler("key", key_cmd))
-    application.add_handler(CommandHandler("tk", tk))
-    application.add_handler(CommandHandler("open", open_cmd))
-    application.add_handler(CommandHandler("off", off_cmd))
-    application.add_handler(CommandHandler("taokey", taokey))
-    application.run_polling()
+    updater = Updater(TOKEN, use_context=True)
+    dp = updater.dispatcher
+
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("getkey", getkey))
+    dp.add_handler(CommandHandler("key", key_cmd))
+    dp.add_handler(CommandHandler("tk", tk))
+    dp.add_handler(CommandHandler("open", open_cmd))
+    dp.add_handler(CommandHandler("off", off_cmd))
+    dp.add_handler(CommandHandler("taokey", taokey))
+
+    updater.start_polling()
+    updater.idle()
 
 if __name__ == '__main__':
     main()
